@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pixel Quest & Sprout Tracker</title>
+  
+  <!-- Retro Pixel Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Press Start 2P', monospace;
+      image-rendering: pixelated;
+    }
+
+    body {
+      background-color: #0B2414; /* Retro dark forest green */
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px 20px 0 20px;
+      overflow-x: hidden;
+    }
+
+    /* Content Layout Container */
+    .content-wrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+      width: 100%;
+      max-width: 540px;
+      padding: 20px 0;
+      gap: 20px;
+    }
+
+    /* Pixel Plant Display Container */
+    .plant-card {
+      background-color: #1e1e24;
+      border: 4px solid #fff;
+      box-shadow: 6px 6px 0px #000;
+      padding: 16px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .plant-title {
+      font-size: 10px;
+      color: #76ff03;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      text-shadow: 2px 2px #000;
+      letter-spacing: 1px;
+    }
+
+    #plant-canvas {
+      background: #0d0d11;
+      border: 3px solid #fff;
+      box-shadow: 3px 3px 0px #000;
+      display: block;
+      width: 120px;
+      height: 120px;
+    }
+
+    /* Main Quest Card Container */
+    .container {
+      background-color: #1e1e24;
+      border: 4px solid #fff;
+      box-shadow: 6px 6px 0px #000;
+      padding: 24px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 16px;
+      text-align: center;
+      color: #ffcc00;
+      text-transform: uppercase;
+      margin: 0 0 20px 0;
+      text-shadow: 2px 2px #000;
+      line-height: 1.4;
+    }
+
+    /* Progress Bar Wrapper */
+    .progress-section {
+      margin-bottom: 24px;
+    }
+
+    .progress-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      margin-bottom: 8px;
+      color: #a0a0b0;
+    }
+
+    .progress-border {
+      background: #000;
+      border: 4px solid #fff;
+      padding: 4px;
+      height: 36px;
+      position: relative;
+    }
+
+    .progress-fill {
+      background-color: #00e676;
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease-in-out;
+      box-shadow: inset 0 -4px 0 #00a854;
+    }
+
+    .percentage-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 10px;
+      color: #fff;
+      text-shadow: 2px 2px #000;
+      pointer-events: none;
+    }
+
+    /* Input & Add Button */
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      background: #000;
+      border: 3px solid #fff;
+      color: #fff;
+      padding: 10px;
+      font-size: 10px;
+      outline: none;
+      resize: vertical;
+      min-height: 70px;
+      line-height: 1.5;
+    }
+
+    textarea:focus {
+      border-color: #ffcc00;
+    }
+
+    .action-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    button.pixel-btn {
+      background: #ff0055;
+      color: #fff;
+      border: 3px solid #fff;
+      box-shadow: 3px 3px 0px #000;
+      padding: 12px 14px;
+      font-size: 10px;
+      cursor: pointer;
+      flex: 1;
+      user-select: none;
+      transition: transform 0.05s;
+    }
+
+    button.pixel-btn.clear-btn {
+      background: #555;
+      flex: 0 0 auto;
+    }
+
+    button.pixel-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px #000;
+    }
+
+    /* Sound Mute Toggle Button */
+    .sound-toggle-btn {
+      background: #00bcd4;
+      color: #fff;
+      border: 3px solid #fff;
+      box-shadow: 3px 3px 0px #000;
+      font-size: 10px;
+      padding: 6px 10px;
+      cursor: pointer;
+      margin-bottom: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    /* Task List Styling */
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      background: #2b2b36;
+      border: 3px solid #fff;
+      box-shadow: 3px 3px 0px #000;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      user-select: none;
+      transition: background 0.2s, opacity 0.2s;
+    }
+
+    li.completed {
+      opacity: 0.6;
+      background: #141419;
+    }
+
+    li.completed .task-text {
+      text-decoration: line-through;
+      color: #777;
+    }
+
+    .task-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      cursor: pointer;
+    }
+
+    /* Custom Pixel Checkbox */
+    .pixel-checkbox {
+      width: 18px;
+      height: 18px;
+      background: #000;
+      border: 2px solid #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    li.completed .pixel-checkbox::after {
+      content: '✓';
+      color: #00e676;
+      font-size: 10px;
+    }
+
+    .task-text {
+      font-size: 10px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: #ff4444;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+
+    .delete-btn:hover {
+      color: #ff0000;
+    }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      color: #a0a0b0;
+      font-size: 10px;
+      width: 100%;
+    }
+
+    footer p {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="content-wrapper">
+    
+    <!-- Plant Canvas Display -->
+    <div class="plant-card">
+      <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+        <span class="plant-title">LEVEL SPROUT</span>
+        <button class="sound-toggle-btn" id="sound-btn" title="Toggle Sound">🔊 SOUND: ON</button>
+      </div>
+      <canvas id="plant-canvas" width="30" height="30"></canvas>
+    </div>
+
+    <!-- Main Quest Card -->
+    <div class="container">
+      <h1>QUEST TRACKER</h1>
+
+      <!-- Progress Bar -->
+      <div class="progress-section">
+        <div class="progress-stats">
+          <span>PROGRESS</span>
+          <span id="task-count">0/0 TASKS</span>
+        </div>
+        <div class="progress-border">
+          <div class="progress-fill" id="progress-fill"></div>
+          <span class="percentage-text" id="percentage-text">0%</span>
+        </div>
+      </div>
+
+      <!-- Input Form -->
+      <div class="input-group">
+        <textarea id="task-input" placeholder="Type single task or paste a list:&#10;- task 1&#10;- task 2"></textarea>
+        <div class="action-row">
+          <button class="pixel-btn" id="add-btn">+ ADD TASKS</button>
+          <button class="pixel-btn clear-btn" id="clear-all-btn">CLEAR ALL</button>
+        </div>
+      </div>
+
+      <!-- Task List -->
+      <ul id="task-list"></ul>
+    </div>
+  </div>
+
+  <footer>
+    <p>by Ainatt.</p>
+  </footer>
+
+  <script>
+    // --- Web Audio API Retro Sound Effects Synthesizer ---
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtx = new AudioContext();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // 8-Bit Click Sound Effect (Button Press)
+    function playClickSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.05);
+
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.05);
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // 8-Bit Task Complete Fanfare / Jump Sound
+    function playCheckSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'square';
+        
+        // Two-step arpeggio (Jump tone)
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        osc.frequency.setValueAtTime(600, ctx.currentTime + 0.06);
+        osc.frequency.setValueAtTime(900, ctx.currentTime + 0.12);
+
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.22);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.22);
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // 8-Bit Uncheck / Low Beep Sound
+    function playUncheckSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(350, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.08);
+
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.08);
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // 8-Bit Delete Sound
+    function playDeleteSound() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(220, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(80, ctx.currentTime + 0.1);
+
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+      } catch (e) {
+        console.warn('Audio play error:', e);
+      }
+    }
+
+    // Canvas Plant Rendering
+    const canvas = document.getElementById('plant-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Draw pixel art plant stage onto 30x30 canvas
+    function renderPixelPlant(percent) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Pot (Always drawn at bottom center)
+      ctx.fillStyle = '#bf616a'; // Terracotta
+      ctx.fillRect(8, 22, 14, 7);
+      ctx.fillStyle = '#d08770'; // Pot rim highlight
+      ctx.fillRect(7, 21, 16, 2);
+
+      // Soil
+      ctx.fillStyle = '#4c566a';
+      ctx.fillRect(9, 22, 12, 1);
+
+      if (percent <= 0) return;
+
+      // Stage 1: Sprout dot (1% - 20%)
+      if (percent > 0) {
+        ctx.fillStyle = '#a3be8c';
+        ctx.fillRect(14, 19, 2, 2);
+      }
+
+      // Stage 2: Stem (21% - 40%)
+      if (percent > 20) {
+        ctx.fillStyle = '#a3be8c';
+        ctx.fillRect(14, 15, 2, 6);
+        ctx.fillRect(12, 17, 2, 2); // Left small leaf
+      }
+
+      // Stage 3: Bigger Plant with Leaves (41% - 60%)
+      if (percent > 40) {
+        ctx.fillStyle = '#a3be8c';
+        ctx.fillRect(14, 11, 2, 10);
+        ctx.fillRect(11, 15, 3, 2); // Left leaf
+        ctx.fillRect(16, 13, 3, 2); // Right leaf
+      }
+
+      // Stage 4: Tall Plant with Bud (61% - 80%)
+      if (percent > 60) {
+        ctx.fillStyle = '#8fbcbb'; // Stem shade
+        ctx.fillRect(14, 7, 2, 14);
+        ctx.fillStyle = '#a3be8c';
+        ctx.fillRect(10, 13, 4, 2); // Bigger left leaf
+        ctx.fillRect(16, 11, 4, 2); // Bigger right leaf
+        
+        // Flower Bud
+        ctx.fillStyle = '#b48ead';
+        ctx.fillRect(13, 5, 4, 3);
+      }
+
+      // Stage 5: Fully Flowered Plant (81% - 100%)
+      if (percent > 80) {
+        ctx.fillStyle = '#8fbcbb';
+        ctx.fillRect(14, 7, 2, 14);
+        ctx.fillStyle = '#a3be8c';
+        ctx.fillRect(9, 13, 5, 2);
+        ctx.fillRect(16, 11, 5, 2);
+
+        // Blooming Flower
+        ctx.fillStyle = '#ebcb8b'; // Yellow center
+        ctx.fillRect(14, 3, 2, 2);
+
+        ctx.fillStyle = '#b48ead'; // Pink Petals
+        ctx.fillRect(13, 1, 4, 2);
+        ctx.fillRect(13, 5, 4, 2);
+        ctx.fillRect(11, 3, 2, 2);
+        ctx.fillRect(17, 3, 2, 2);
+      }
+    }
+
+    const taskInput = document.getElementById('task-input');
+    const addBtn = document.getElementById('add-btn');
+    const clearAllBtn = document.getElementById('clear-all-btn');
+    const soundBtn = document.getElementById('sound-btn');
+    const taskList = document.getElementById('task-list');
+    const progressFill = document.getElementById('progress-fill');
+    const percentageText = document.getElementById('percentage-text');
+    const taskCount = document.getElementById('task-count');
+
+    // Load tasks from localStorage on start
+    let tasks = JSON.parse(localStorage.getItem('pixel_tasks')) || [];
+
+    function saveAndRender() {
+      localStorage.setItem('pixel_tasks', JSON.stringify(tasks));
+      renderTasks();
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      let completedCount = 0;
+
+      tasks.forEach((task, index) => {
+        if (task.completed) completedCount++;
+
+        const li = document.createElement('li');
+        if (task.completed) li.classList.add('completed');
+
+        li.innerHTML = `
+          <div class="task-content" onclick="toggleTask(${index})">
+            <div class="pixel-checkbox"></div>
+            <span class="task-text">${escapeHtml(task.text)}</span>
+          </div>
+          <button class="delete-btn" onclick="event.stopPropagation(); deleteTask(${index})">✕</button>
+        `;
+
+        taskList.appendChild(li);
+      });
+
+      // Update Progress Bar
+      const total = tasks.length;
+      const percent = total === 0 ? 0 : Math.round((completedCount / total) * 100);
+
+      progressFill.style.width = percent + '%';
+      percentageText.textContent = percent + '%';
+      taskCount.textContent = `${completedCount}/${total} TASKS`;
+
+      // Update plant canvas
+      renderPixelPlant(percent);
+    }
+
+    function addTasks() {
+      playClickSound();
+      const rawText = taskInput.value.trim();
+      if (!rawText) return;
+
+      // Split by new line so bulk list items work automatically
+      const lines = rawText.split('\n');
+
+      lines.forEach(line => {
+        // Remove common bullet prefixes like "- ", "* ", "1. ", "• "
+        let cleanText = line.replace(/^[\s\-\*\•\d+\.]+/g, '').trim();
+        
+        if (cleanText.length > 0) {
+          tasks.push({ text: cleanText, completed: false });
+        }
+      });
+
+      taskInput.value = '';
+      saveAndRender();
+    }
+
+    function toggleTask(index) {
+      tasks[index].completed = !tasks[index].completed;
+      if (tasks[index].completed) {
+        playCheckSound();
+      } else {
+        playUncheckSound();
+      }
+      saveAndRender();
+    }
+
+    function deleteTask(index) {
+      playDeleteSound();
+      tasks.splice(index, 1);
+      saveAndRender();
+    }
+
+    function clearAllTasks() {
+      playClickSound();
+      if (tasks.length === 0) return;
+      if (confirm("Are you sure you want to clear all tasks?")) {
+        tasks = [];
+        saveAndRender();
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      soundBtn.textContent = soundEnabled ? '🔊 SOUND: ON' : '🔇 SOUND: OFF';
+      if (soundEnabled) playClickSound();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.innerText = text;
+      return div.innerHTML;
+    }
+
+    // Event Listeners
+    addBtn.addEventListener('click', addTasks);
+    clearAllBtn.addEventListener('click', clearAllTasks);
+    soundBtn.addEventListener('click', toggleSound);
+    
+    // Play subtle click sound when focusing textarea
+    taskInput.addEventListener('focus', () => {
+      getAudioContext();
+    });
+
+    // Press Ctrl+Enter or Cmd+Enter to add list quickly
+    taskInput.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        addTasks();
+      }
+    });
+
+    // Initial render on window load
+    window.onload = function() {
+      renderTasks();
+    };
+  </script>
+</body>
+</html>
